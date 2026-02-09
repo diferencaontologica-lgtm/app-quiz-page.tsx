@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz sobre Husserl</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f8ff; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .question { margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; }
+        .option { margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
+        .option.selected { background-color: #d0e7ff; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .results { display: none; }
+        .result-item { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .correct { background-color: #d4edda; }
+        .incorrect { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz sobre a Crise da Razão e a Fênix do Sentido (Husserl)</h1>
+        <p>Responda as 10 perguntas. Ao final, veja a correção e sua nota (0-10).</p>
+        
+        <div id="quiz">
+            <!-- Perguntas serão inseridas aqui via JS -->
+        </div>
+        
+        <button id="submitBtn" onclick="submitQuiz()">Finalizar Quiz</button>
+        
+        <div id="results" class="results">
+            <h2>Resultados</h2>
+            <p id="score"></p>
+            <div id="details"></div>
+            <button onclick="sendEmail()">Enviar Resultados por Email</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/emailjs.min.js"></script>
+    <script>
+        // Dados das perguntas baseadas no texto
+        const questions = [
+            {
+                question: "Segundo Husserl, qual foi o marco histórico da crise da humanidade europeia e das ciências?",
+                options: ["A descoberta da relatividade por Einstein", "A matematização da natureza iniciada por Galileu Galilei", "A invenção da máquina a vapor", "A Revolução Francesa"],
+                correct: 1,
+                explanation: "Husserl identifica a 'matematização da natureza' por Galileu como o início da crise, substituindo o mundo vivido por idealizações matemáticas."
+            },
+            {
+                question: "O que Husserl chama de 'mundo da vida' (Lebenswelt)?",
+                options: ["Um sistema de idealizações matemáticas", "O solo intuitivo das experiências cotidianas, onde as coisas têm cores, valores e utilidades", "Um domínio de objetos puramente físicos e mensuráveis", "A redução fenomenológica"],
+                correct: 1,
+                explanation: "Lebenswelt é o solo intuitivo das experiências cotidianas, contrastando com o mundo reduzido a objetos físicos."
+            },
+            {
+                question: "Como Galileu substituiu o mundo vivido, segundo o texto?",
+                options: ["Por leis de causalidade mecânica", "Por um sistema de idealizações matemáticas, reduzindo a natureza a uma res extensa", "Por uma análise espiritual do sujeito", "Por uma intersubjetividade transcendental"],
+                correct: 1,
+                explanation: "Galileu reduziu a natureza a 'res extensa' (coisa extensa), um domínio físico mensurável, via idealizações matemáticas."
+            },
+            {
+                question: "O que Husserl critica na ciência moderna em relação à subjetividade?",
+                options: ["Ela inclui demais a subjetividade", "Ela se torna objetivista e naturalista, expulsando a subjetividade e tratando o cientista como 'funcionário da técnica'", "Ela ignora completamente a natureza", "Ela se baseia apenas em empiria sensível"],
+                correct: 1,
+                explanation: "A ciência moderna é objetivista, ignorando a subjetividade e transformando o cientista em um 'funcionário da técnica'."
+            },
+            {
+                question: "Qual é a consequência da 'cegueira' dos cientistas modernos, de acordo com Husserl?",
+                options: ["Eles produzem resultados exatos, mas perdem a capacidade de responder a questões sobre sentido da existência", "Eles descobrem infinitudes de possibilidades reais", "Eles tratam fórmulas como obras do espírito humano", "Eles fundamentam a ciência do espírito na física"],
+                correct: 0,
+                explanation: "A 'cegueira' leva a resultados exatos, mas ignora questões existenciais como sentido da vida."
+            },
+            {
+                question: "O que Husserl propõe como resposta à crise de racionalidade?",
+                options: ["Um retorno ao objetivismo puro", "Um 'heroísmo da razão' com epoché e redução fenomenológica para redescobrir o ego transcendental", "A dominação técnica da natureza", "O niilismo espiritual"],
+                correct: 1,
+                explanation: "A resposta é o 'heroísmo da razão', usando epoché e redução para redescobrir o ego transcendental."
+            },
+            {
+                question: "O que é a 'enfermidade europeia' mencionada no texto?",
+                options: ["A perda de sentido da modernidade devido ao divórcio entre razão técnica e vida espiritual", "A matematização da natureza", "A autonomia da natureza", "A intersubjetividade transcendental"],
+                correct: 0,
+                explanation: "É a perda de sentido causada pelo divórcio entre razão técnica e espiritualidade."
+            },
+            {
+                question: "Como a fenomenologia reconduz o olhar, segundo Husserl?",
+                options: ["Para o espaço-tempo idealizado de Einstein", "Para o mundo da vida (Lebenswelt), o solo de todas as evidências que a ciência pressupõe", "Para processos físicos e computacionais da IA", "Para a redução a res extensa"],
+                correct: 1,
+                explanation: "A fenomenologia retorna ao Lebenswelt, o solo esquecido das evidências científicas."
+            },
+            {
+                question: "O que Husserl argumenta sobre a autonomia do espírito versus a natureza?",
+                options: ["A natureza é autônoma, e o espírito é um anexo real dos corpos", "Somente o espírito é autônomo e capaz de conhecimento de si; a natureza tem autonomia aparente", "Ambos são igualmente autônomos", "O espírito deve ser explicado pela física e química"],
+                correct: 1,
+                explanation: "O espírito é autônomo e capaz de autoconhecimento; a natureza tem autonomia aparente."
+            },
+            {
+                question: "Qual é o objetivo final da fenomenologia, de acordo com o texto?",
+                options: ["Produzir resultados exatos em ciências da natureza", "A autoexplicitação radical do ego, transformando o filósofo em 'espectador desinteressado' para recuperar autonomia e responsabilidade ética", "Ignorar a subjetividade transcendental", "Fundamentar a ciência da natureza na atividade espiritual"],
+                correct: 1,
+                explanation: "O objetivo é a autoexplicitação do ego para recuperar autonomia ética."
+            }
+        ];
+
+        let selectedAnswers = new Array(10).fill(null);
+        let shuffledQuestions = [...questions].sort(() => Math.random() - 0.5); // Randomizar perguntas
+
+        // Renderizar perguntas
+        const quizDiv = document.getElementById('quiz');
+        shuffledQuestions.forEach((q, index) => {
+            const qDiv = document.createElement('div');
+            qDiv.className = 'question';
+            qDiv.innerHTML = `<h3>${index + 1}. ${q.question}</h3><div class="options"></div>`;
+            const optionsDiv = qDiv.querySelector('.options');
+            q.options.forEach((opt, optIndex) => {
+                const optBtn = document.createElement('div');
+                optBtn.className = 'option';
+                optBtn.textContent = opt;
+                optBtn.onclick = () => selectAnswer(index, optIndex, optBtn);
+                optionsDiv.appendChild(optBtn);
+            });
+            quizDiv.appendChild(qDiv);
+        });
+
+        function selectAnswer(qIndex, optIndex, btn) {
+            selectedAnswers[qIndex] = optIndex;
+            // Remover seleção anterior
+            btn.parentNode.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        function submitQuiz() {
+            if (selectedAnswers.includes(null)) {
+                alert('Responda todas as perguntas!');
+                return;
+            }
+            let score = 0;
+            const detailsDiv = document.getElementById('details');
+            detailsDiv.innerHTML = '';
+            shuffledQuestions.forEach((q, index) => {
+                const isCorrect = selectedAnswers[index] === q.correct;
+                if (isCorrect) score++;
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `result-item ${isCorrect ? 'correct' : 'incorrect'}`;
+                resultDiv.innerHTML = `
+                    <strong>${index + 1}. ${q.question}</strong><br>
+                    Sua resposta: ${q.options[selectedAnswers[index]]}<br>
+                    ${isCorrect ? 'Correta!' : `Incorreta. Correta: ${q.options[q.correct]}`}<br>
+                    <em>Explicação: ${q.explanation}</em>
+                `;
+                detailsDiv.appendChild(resultDiv);
+            });
+            document.getElementById('score').textContent = `Nota: ${score}/10`;
+            document.getElementById('quiz').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function sendEmail() {
+            // Configurar EmailJS (substitua com suas credenciais)
+            emailjs.init('YOUR_PUBLIC_KEY'); // Obtenha no site do EmailJS
+            const templateParams = {
+                to_email: 'rf4456@ucdb.br',
+                subject: 'Resultados do Quiz Husserl',
+                message: `Nota: ${document.getElementById('score').textContent}\n\nDetalhes:\n${document.getElementById('details').textContent.replace(/<[^>]*>/g, '')}`
+            };
+            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+                .then(() => alert('Email enviado!'))
+                .catch(err => alert('Erro ao enviar: ' + err));
+        }
+    </script>
+</body>
+</html>
